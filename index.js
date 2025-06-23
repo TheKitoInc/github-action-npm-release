@@ -3,6 +3,7 @@ const { Octokit } = require("@octokit/rest");
 const { join: pathJoin } = require("path");
 const { promisify } = require("util");
 const exec = promisify(require("child_process").exec);
+const fs = require('fs');
 
 const octokit = new Octokit({
   auth: core.getInput("token"),
@@ -99,18 +100,18 @@ async function main() {
       // What output should we provide?
       // https://docs.github.com/en/rest/reference/repos#get-a-release
       core.info(`Created release ${newVersion}`);
-      core.setOutput("released", true);
-      core.setOutput("html_url", data.html_url);
-      core.setOutput("upload_url", data.upload_url);
-      core.setOutput("release_id", data.id);
-      core.setOutput("release_tag", data.tag_name);
-      core.setOutput("release_name", data.name);
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `released=true\n`);
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `html_url=${data.html_url}\n`);
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `upload_url=${data.upload_url}\n`);
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `release_id=${data.id}\n`);
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `release_tag=${data.tag_name}\n`);
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `release_name=${data.name}\n`);
     } catch (error) {
       core.setFailed(
         `Failed to create release ${newVersion} for ${owner}/${repo}#${process.env.GITHUB_SHA}`
       );
       core.error(error);
-      core.setOutput("released", true);
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `released=false\n`);
       core.debug(JSON.stringify(error.headers));
       core.debug(JSON.stringify(error.request));
       process.exit();
